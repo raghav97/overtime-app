@@ -3,8 +3,8 @@ require 'rails_helper'
 RSpec.describe Post, type: :model do
   describe "Creation" do
     before "Creation" do
-      @post = Post.create(date: Date.today, rationale: "Anything")
-      @user = User.create(first_name: "Raghav", last_name: "Vc")
+      @post = FactoryGirl.build_stubbed(:post)
+      @user = FactoryGirl.create(:user)
       @post.user = @user
     end
 
