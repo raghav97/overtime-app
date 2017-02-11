@@ -4,6 +4,8 @@ RSpec.describe Post, type: :model do
   describe "Creation" do
     before "Creation" do
       @post = Post.create(date: Date.today, rationale: "Anything")
+      @user = User.create(first_name: "Raghav", last_name: "Vc")
+      @post.user = @user
     end
 
     it "can't be created" do
