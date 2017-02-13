@@ -2,6 +2,7 @@
   <h1>Time Tracker</h1>
 </div>
 
+<% if current_user %>
 <ul class="custom-nav nav nav-tabs">
   <li class="<%= active?(root_path) %>">
     <%= link_to "Home", root_path %>
@@ -15,16 +16,20 @@
   </li>
 
   <li class="dropdown pull-right">
-     <a href="#" data-toggle="dropdown" class="dropdown-toggle">Account<strong class="caret"></strong></a>
+     <a href="#" data-toggle="dropdown" class="dropdown-toggle">Options<strong class="caret"></strong></a>
     <ul class="dropdown-menu">
-      <li>
-        <%= link_to "To do admin dashboard", root_path %>
-      </li>
-      <li class="divider">
-      </li>
+      <% if current_user.try(:type) == 'AdminUser' %> 
+        <li>
+          <%= link_to "To do admin dashboard", admin_root_path %>
+        </li>
+        <li class="divider">
+        </li>
+
+      <% end %>
       <li>
         <%= link_to "Logout", destroy_user_session_path, method: :delete %>
       </li>
     </ul>
   </li>
 </ul>
+<% end %>
