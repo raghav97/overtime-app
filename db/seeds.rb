@@ -8,3 +8,5 @@ end
 puts "A 100 posts have been created"
 
 AdminUser.create(first_name: "Admin", last_name: "Vc", email: "giri@gmail.com", password: "password", password_confirmation: "password")
+
+@user = User.create(first_name: "Tester", last_name: "Vc", email: "test@gmail.com", password: "password", password_confirmation: "password")

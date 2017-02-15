@@ -18,10 +18,26 @@ describe 'navigate' do
     end
 
     it 'has a list of posts' do
-      post1 = FactoryGirl.build_stubbed(:post)
+      post1 = FactoryGirl.create(:post)
       post2 = FactoryGirl.create(:second_post)
+      post1.update(user_id: @user.id)
+      post2.update(user_id: @user.id)
+
       visit posts_path
-      expect(page).to have_content(/rationale|more/)     
+      expect(page).to have_content("more rationale")   
+    end
+
+    it 'has a scope so that only post creators can see their posts' do
+      post1 = Post.create(date: Date.today, rationale: "rat 1", user_id: @user.id)
+      post2 = Post.create(date: Date.today, rationale: "rat 2", user_id: @user.id)
+
+      other_user = User.create(first_name: "other", last_name: "user", password: "password", password_confirmation: "password", email: "other@gmail.com")
+      post_from_other_user = Post.create(date: Date.yesterday, rationale: "other rat", user_id: other_user.id)
+      
+      visit posts_path
+
+      expect(page).to_not have_content(/other rat/)
+      
     end
   end
 
@@ -37,6 +53,7 @@ describe 'navigate' do
   describe 'delete' do
     it 'can be deleted' do
       @post = FactoryGirl.create(:post)
+      @post.update(user_id: @user.id)
       visit posts_path
 
       click_link("delete_post_#{@post.id}_from_index")
