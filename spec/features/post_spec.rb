@@ -1,14 +1,21 @@
 require 'rails_helper'
 
 describe 'navigate' do
-  before do
-    @user = FactoryGirl.create(:user)
-    login_as(@user, :scope => :user)
+  let(:user) { FactoryGirl.create(:user) }
+
+  let(:post) do
+    Post.create(date: Date.today, rationale: "Rationale", user_id: user.id)
   end
+
+  before do
+    login_as(user, :scope => :user)
+  end
+
   describe 'index' do
     before do
       visit posts_path
-    end 
+    end
+
     it 'can be reached successfully' do
       expect(page.status_code).to eq(200)
     end
@@ -18,31 +25,24 @@ describe 'navigate' do
     end
 
     it 'has a list of posts' do
-      post1 = FactoryGirl.create(:post)
-      post2 = FactoryGirl.create(:second_post)
-      post1.update(user_id: @user.id)
-      post2.update(user_id: @user.id)
-
+      post1 = FactoryGirl.build_stubbed(:post)
+      post2 = FactoryGirl.build_stubbed(:second_post)
       visit posts_path
-      expect(page).to have_content("more rationale")   
+      expect(page).to have_content(/Rationale|content/)
     end
 
     it 'has a scope so that only post creators can see their posts' do
-      post1 = Post.create(date: Date.today, rationale: "rat 1", user_id: @user.id)
-      post2 = Post.create(date: Date.today, rationale: "rat 2", user_id: @user.id)
+      other_user = User.create(first_name: 'Non', last_name: 'Authorized', email: "nonauth@example.com", password: "asdfasdf", password_confirmation: "asdfasdf")
+      post_from_other_user = Post.create(date: Date.today, rationale: "This post shouldn't be seen", user_id: other_user.id)
 
-      other_user = User.create(first_name: "other", last_name: "user", password: "password", password_confirmation: "password", email: "other@gmail.com")
-      post_from_other_user = Post.create(date: Date.yesterday, rationale: "other rat", user_id: other_user.id)
-      
       visit posts_path
 
-      expect(page).to_not have_content(/other rat/)
-      
+      expect(page).to_not have_content(/This post shouldn't be seen/)
     end
   end
 
   describe 'new' do
-    it 'has a link from the home page' do
+    it 'has a link from the homepage' do
       visit root_path
 
       click_link("new_post_from_nav")
@@ -52,11 +52,16 @@ describe 'navigate' do
 
   describe 'delete' do
     it 'can be deleted' do
-      @post = FactoryGirl.create(:post)
-      @post.update(user_id: @user.id)
+      logout(:user)
+
+      delete_user = FactoryGirl.create(:user)
+      login_as(delete_user, :scope => :user)
+
+      post_to_delete = Post.create(date: Date.today, rationale: 'asdf', user_id: delete_user.id)
+
       visit posts_path
 
-      click_link("delete_post_#{@post.id}_from_index")
+      click_link("delete_post_#{post_to_delete.id}_from_index")
       expect(page.status_code).to eq(200)
     end
   end
@@ -87,18 +92,9 @@ describe 'navigate' do
     end
   end
 
-
   describe 'edit' do
-    before do
-      @edit_user = User.create(first_name: "test", last_name: "user", email: "test@test.com", password: "testtest", password_confirmation: "testtest")
-      login_as(@edit_user, :scope => :user)
-      @edit_post = Post.create(date: Date.today, rationale: "test rationale", user_id: @edit_user.id)
-
-    end
-
     it 'can be edited' do
-
-      visit edit_post_path(@edit_post)
+      visit edit_post_path(post)
 
       fill_in 'post[date]', with: Date.today
       fill_in 'post[rationale]', with: "Edited content"
@@ -107,15 +103,14 @@ describe 'navigate' do
       expect(page).to have_content("Edited content")
     end
 
-    it 'can not be edited by a non authorized user' do
+    it 'cannot be edited by a non authorized user' do
       logout(:user)
-
       non_authorized_user = FactoryGirl.create(:non_authorized_user)
       login_as(non_authorized_user, :scope => :user)
 
-      visit edit_post_path(@edit_post)
+      visit edit_post_path(post)
 
       expect(current_path).to eq(root_path)
-    end 
+    end
   end
 end
